@@ -1,28 +1,15 @@
-#!/usr/bin/env python
-#
-# Copyright 2007 Google Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
 import webapp2
 import os
 import jinja2
-
 from google.appengine.ext import db
+import cgi
 
 template_dir = os.path.join(os.path.dirname(__file__), "templates")
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
 								autoescape = True)
+
+def blog_key(name = 'default'):
+	return db.Key.from_path('blogs', name)
 
 class Handler(webapp2.RequestHandler):
 	def write(self, *a, **kw):
@@ -35,39 +22,47 @@ class Handler(webapp2.RequestHandler):
 	def render(self, template, **kw):
 		self.write(self.render_str(template, **kw))
 
-class Art(db.Model):
+class Posts(db.Model):
 	title = db.StringProperty(required=True)
-	art = db.TextProperty(required=True)
+	newpost = db.TextProperty(required=True)
 	created = db.DateTimeProperty(auto_now_add=True)
 
 class MainPage(Handler):
-	def render_front(self, title="", art="", error=""):
-		arts = db.GqlQuery("SELECT * FROM Art ORDER BY created DESC")
+	def get(self, title="", newpost="", error=""):
+		newposts = db.GqlQuery("SELECT * FROM Posts "
+			"ORDER BY created DESC limit 5;")
+		# newposts = Posts.all().order('-created')
+		self.render("blogpost.html", title=title, newpost=newpost, error=error, newposts=newposts)
 
-		self.render("front.html", title=title, art=art, error=error, arts=arts)
-
-	def get(self):
-		self.render_front()
+class NewPost(Handler):
+	def get(self, title="", newpost="", error=""):
+		self.render("newpost.html", title=title, newpost=newpost, error=error)
 
 	def post(self):
 		title = self.request.get("title")
-		art = self.request.get("art")
+		newpost = self.request.get("newpost")
 
-		if title and art:
-			a = Art(title=title, art=art)
-			a.put()
-			# self.write("thanks")
-			self.redirect("/")
+		if not title:
+			error = "Please enter a title"
+			self.get(title=title, newpost=newpost, error=error)
+
+		elif not newpost:
+			error = "Please enter a blog post" 
+			self.get(title=title, newpost=newpost, error=error)
+
 		else:
-			error = "we got an error"
-			self.render_front(title, art, error)
+			a = Posts(title=title, newpost=newpost)
+			a.put()
+			self.get()
+
+class ViewPostHandler(Handler):
+    def get(self, id):
+    	key = db.Key.from_path('Posts', int(id), parent = blog_key())
+    	post = Posts.key
+    	self.response.write(post)
 
 app = webapp2.WSGIApplication([
-	('/', MainPage)
+	('/blog', MainPage),
+	('/blog/newpost', NewPost),
+	webapp2.Route('/blog/<id:\d+>', ViewPostHandler)
 ], debug=True)
-
-# class MainHandler(webapp2.RequestHandler):
-#     def get(self):
-#         self.response.write('Helloh world!')
-
-

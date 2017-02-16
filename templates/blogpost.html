@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+	{% for newpost in newposts %}
+		<div class="newpost">
+			<a href="/blog"><div class="newpost-title">{{newpost.title}}</div></a>
+			<pre class="newpost-body">{{newpost.newpost}}</pre>
+		</div>
+	{% endfor %}
+
+{% endblock %}
