@@ -4,7 +4,8 @@
 
 	{% for newpost in newposts %}
 		<div class="newpost">
-			<a href="/blog"><div class="newpost-title">{{newpost.title}}</div></a>
+			<a href="/blog/{{newpost.key().id()}}">{{newpost.title}}</a>
+<!-- 			<div class="newpost-title">{{newpost.title}}</div> -->
 			<pre class="newpost-body">{{newpost.newpost}}</pre>
 		</div>
 	{% endfor %}
