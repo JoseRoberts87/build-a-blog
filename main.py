@@ -33,7 +33,6 @@ class MainPage(Handler):
     def get(self):
         newposts = db.GqlQuery("SELECT * FROM Posts "
             "ORDER BY created DESC limit 5;")
-
         # newposts = Posts.all().order('-created')
         self.render("blogpost.html", newposts=newposts)
 
@@ -47,10 +46,8 @@ class NewPost(Handler):
     def post(self):
         title = self.request.get("title")
         newpost = self.request.get("newpost")
-
         # blog_id = self.request.get("id")
         # post = Posts.get_by_id( int(blog_id) )
-
         if not title:
             error = "Please enter a title"
             self.get(title=title, newpost=newpost, error=error)
@@ -62,10 +59,10 @@ class NewPost(Handler):
         else:
             a = Posts(title=title, newpost=newpost)
             a.put()
-
-            t = jinja_env.get_template("blogpost.html")
-            content = t.render(newpost = post)
-            self.response.write(content)
+            self.redirect('/blog/%s' % str(a.key().id()))
+            # t = jinja_env.get_template("blogpost.html")
+            # content = t.render(newpost = post)
+            # self.response.write(content)
             # postid = a.key().id()
             # print "postid = ", str(postid)
             # self.get()
@@ -73,15 +70,16 @@ class NewPost(Handler):
 class ViewPostHandler(Handler):
     def get(self, id):
 
-        key = db.Key.from_path('Posts', int(id), parent=blog_key())
+        key = db.Key.from_path('Posts', int(id), parent=None)
         post = db.get(key)
 
         t = jinja_env.get_template("permalink.html")
-        content = t.render(newposts = post)
+        content = t.render(post = post)
         self.response.write(content)
 
 app = webapp2.WSGIApplication([
-    ('/blog', MainPage),
+    ('/', MainPage),
+    ('/blog?', MainPage),
     ('/blog/newpost', NewPost),
     webapp2.Route('/blog/<id:\d+>', ViewPostHandler)
 ], debug=True)

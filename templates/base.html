@@ -5,9 +5,11 @@
 	
 	<body>
 	<h1>/ascii/</h1>
-	<a href="/blog">Home</a>
-	<a href="/blog/newpost">New Post</a>
-
+	<nav>
+		<a href="/blog">Home</a>
+		&nbsp; | &nbsp;
+		<a href="/blog/newpost">New Post</a>
+	</nav>
 	<hr>
 
         {% block content %}
@@ -15,6 +17,7 @@
         {% endblock %}
     <hr>
     <a href="">Prev</a>
-    <a href="">Next</a>
+	&nbsp; | &nbsp;
+    <a href="/blog?page=2">Next</a>
 	</body>	
 </html>
